@@ -1,26 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Ring Slider</title>
-
 <style>
 #probContainer {
     position: relative;
     width: 250px;
     height: 250px;
-    margin: 80px auto;
+    margin: auto;
 }
 #probValue {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 30px;
+    font-size: 32px;
     font-weight: bold;
+    pointer-events: none;
 }
 </style>
-
 </head>
 <body>
 
@@ -30,48 +27,75 @@
 </div>
 
 <script>
-var canvas = document.getElementById("probRing");
-var ctx = canvas.getContext("2d");
-var valueDisplay = document.getElementById("probValue");
+// canvas setup
+let canvas = document.getElementById("probRing");
+let ctx = canvas.getContext("2d");
+let valueDisplay = document.getElementById("probValue");
 
-var radius = 110;
-var lineWidth = 20;
-var p = 0.5;
+let radius = 110;
+let lineWidth = 20;
+let p = 0.5;
+let dragging = false;
 
+// draw ring
 function drawRing() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Background
+    // background circle
     ctx.beginPath();
-    ctx.arc(125, 125, radius, 0, 2*Math.PI);
-    ctx.strokeStyle = "#dddddd";
+    ctx.arc(125, 125, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#ddd";
     ctx.lineWidth = lineWidth;
     ctx.stroke();
 
-    // Filled part
+    // filled probability arc
     ctx.beginPath();
-    ctx.arc(125, 125, radius, -Math.PI/2, (2*Math.PI*p)-Math.PI/2);
-    ctx.strokeStyle = "#4285f4";
+    ctx.arc(125, 125, radius, -Math.PI/2, (2 * Math.PI * p) - Math.PI/2);
+    ctx.strokeStyle = "#4A90E2";
     ctx.lineWidth = lineWidth;
     ctx.stroke();
 
-    valueDisplay.innerHTML = Math.round(p*100) + "%";
+    // value indicator
+    valueDisplay.textContent = Math.round(p * 100) + "%";
 }
 
-drawRing();
+// update p value smoothly from mouse location
+function updateValueFromEvent(e) {
+    let rect = canvas.getBoundingClientRect();
+    let x = (e.clientX || e.touches?.[0].clientX) - rect.left - 125;
+    let y = (e.clientY || e.touches?.[0].clientY) - rect.top - 125;
 
-canvas.addEventListener("click", function(e) {
-    var rect = canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left - 125;
-    var y = e.clientY - rect.top - 125;
+    let angle = Math.atan2(y, x);
 
-    var angle = Math.atan2(y, x);
-    angle = angle < -Math.PI/2 ? angle + 2*Math.PI : angle;
-    p = (angle + Math.PI/2) / (2*Math.PI);
-    p = Math.min(Math.max(p, 0), 1);
+    // normalize angle to [0, 1]
+    let newP = (angle + Math.PI/2) / (2 * Math.PI);
+    if (newP < 0) newP += 1;
+    if (newP > 1) newP -= 1;
 
+    p = newP;
     drawRing();
+}
+
+// event listeners
+canvas.addEventListener("mousedown", () => dragging = true);
+canvas.addEventListener("mouseup", () => dragging = false);
+canvas.addEventListener("mouseleave", () => dragging = false);
+
+canvas.addEventListener("mousemove", (e) => {
+    if (dragging) updateValueFromEvent(e);
 });
+
+// mobile support
+canvas.addEventListener("touchstart", () => dragging = true);
+canvas.addEventListener("touchend", () => dragging = false);
+canvas.addEventListener("touchmove", (e) => {
+    if (dragging) {
+        e.preventDefault();
+        updateValueFromEvent(e);
+    }
+});
+
+drawRing();
 </script>
 
 </body>
