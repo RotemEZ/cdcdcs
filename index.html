@@ -1,5 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ring Slider</title>
+
+<style>
+#probContainer {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin: 80px auto;
+}
+#probValue {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+    font-weight: bold;
+}
+</style>
+
+</head>
+<body>
+
 <div id="probContainer">
     <canvas id="probRing" width="250" height="250"></canvas>
     <div id="probValue">50%</div>
 </div>
-<input type="hidden" id="probField" name="probField" />
+
+<script>
+var canvas = document.getElementById("probRing");
+var ctx = canvas.getContext("2d");
+var valueDisplay = document.getElementById("probValue");
+
+var radius = 110;
+var lineWidth = 20;
+var p = 0.5;
+
+function drawRing() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background
+    ctx.beginPath();
+    ctx.arc(125, 125, radius, 0, 2*Math.PI);
+    ctx.strokeStyle = "#dddddd";
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+
+    // Filled part
+    ctx.beginPath();
+    ctx.arc(125, 125, radius, -Math.PI/2, (2*Math.PI*p)-Math.PI/2);
+    ctx.strokeStyle = "#4285f4";
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+
+    valueDisplay.innerHTML = Math.round(p*100) + "%";
+}
+
+drawRing();
+
+canvas.addEventListener("click", function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var x = e.clientX - rect.left - 125;
+    var y = e.clientY - rect.top - 125;
+
+    var angle = Math.atan2(y, x);
+    angle = angle < -Math.PI/2 ? angle + 2*Math.PI : angle;
+    p = (angle + Math.PI/2) / (2*Math.PI);
+    p = Math.min(Math.max(p, 0), 1);
+
+    drawRing();
+});
+</script>
+
+</body>
+</html>
